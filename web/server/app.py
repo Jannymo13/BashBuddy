@@ -76,18 +76,19 @@ def get_next_question():
         # If this was question 1 or 2, get the next question
         if question_num < 3:
             # Simulate a placeholder answer to prompt Gemini for the next question
-            # According to prompt.py, Gemini waits for answer before giving next question
-            placeholder_answer = "[Answer provided]"
-            session["conversation_history"].append(placeholder_answer)
+            placeholder_answer = "user_answer_placeholder"
             
-            # Build the conversation and request next question
+            # Build the conversation and explicitly request the next question number
             conversation = "\n".join(session["conversation_history"])
+            next_question_prompt = f"{conversation}\n{placeholder_answer}\nProvide the next question (question {question_num + 1} of 3):"
             
             # Request the next question from Gemini
-            result = generate_response(conversation)
+            result = generate_response(next_question_prompt)
             next_question = result.get("generated_text", "").strip()
             
-            # Store in session
+            # Clean up the response - remove any conversational fluff
+            # Store the placeholder and question in conversation history
+            session["conversation_history"].append(placeholder_answer)
             session["conversation_history"].append(next_question)
             session["questions"].append(next_question)
             session["question_count"] += 1
