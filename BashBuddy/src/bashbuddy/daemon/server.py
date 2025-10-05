@@ -145,6 +145,7 @@ class BashBuddyDaemon:
 
             # Function calling loop
             max_iterations = 10
+            retry_count = 0  # Track if we've retried for text response
             for iteration in range(max_iterations):
                 # Call Gemini with tools enabled
                 response = self.client.models.generate_content(
@@ -214,11 +215,36 @@ class BashBuddyDaemon:
 
                 else:
                     # Gemini returned text instead of function call
-                    # Accept it and return (saves API calls)
                     answer = part.text
                     
                     logger.warning(f"[Iteration {iteration+1}] Gemini returned text instead of function call: {answer[:100]}...")
-                    logger.info("Accepting text response instead of forcing function call (saves API calls)")
+                    
+                    # Retry once with a strong reminder to use suggested_command
+                    if retry_count == 0:
+                        retry_count += 1
+                        logger.info("Retrying with stronger instruction to use suggested_command")
+                        
+                        # Add the text response to conversation
+                        contents.append({
+                            "role": "model",
+                            "parts": [{"text": answer}]
+                        })
+                        
+                        # Add a VERY strong reminder
+                        contents.append({
+                            "role": "user",
+                            "parts": [{"text": (
+                                "CRITICAL: You MUST call the suggested_command() function now. "
+                                "Do NOT respond with text. Your response above should be converted "
+                                "to a suggested_command(command, explanation) function call. "
+                                "Extract the command and explanation from your text and call the function."
+                            )}]
+                        })
+                        
+                        continue  # Try again
+                    
+                    # Already retried once, accept the text response
+                    logger.info("Already retried once, accepting text response")
                     
                     self.history.append({"role": "assistant", "content": answer})
                     

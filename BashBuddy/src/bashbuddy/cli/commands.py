@@ -6,26 +6,18 @@ from bashbuddy.cli.display import (
     display_function_calls,
     display_command_and_explanation,
     display_text_response,
-    prompt_user_action
+    prompt_user_action,
+    execute_command,
+    copy_to_clipboard
 )
 
 
-@click.command()
-@click.argument("request")
-@click.option("--cmd", "-c", help="Command to get help for", required=False)
-def ask(request: str, cmd: str | None):
-    """Ask BashBuddy a question about bash commands."""
-    
+def process_ask_request(message: str):
+    """Process an ask request and handle user interactions."""
     # Automatically ensure daemon is running (starts it if needed)
     if not ensure_daemon_running():
         click.echo("Error: Failed to start BashBuddy daemon.", err=True)
         raise click.Abort()
-    
-    # Prepare the message
-    if cmd:
-        message = f"Help for command '{cmd}': {request}"
-    else:
-        message = request
     
     # Send request to daemon
     response = send_command("ask", message=message)
@@ -43,17 +35,24 @@ def ask(request: str, cmd: str | None):
             action, followup = prompt_user_action(response["command"])
 
             if action == 'run':
-                click.echo(click.style("\nRunning command...\n", fg="green", bold=True))
-                # TODO: Implement execute_command(response["command"])
-                click.echo(click.style("Command execution not yet implemented!", fg="yellow"))
+                click.echo(click.style("\nRunning command...", fg="green", bold=True))
+                click.echo(click.style("Command Output:", fg="white", bold=True))
+                execute_command(
+                    response["command"], 
+                    response.get("explanation", ""),
+                    message  # Pass the user's original request
+                )
             elif action == 'copy':
-                click.echo(click.style("\nCopying to clipboard...\n", fg="green", bold=True))
-                # TODO: Implement copy_to_clipboard(response["command"])
-                click.echo(click.style("Clipboard support not yet implemented!", fg="yellow"))
+                click.echo()
+                copy_to_clipboard(
+                    response["command"], 
+                    response.get("explanation", ""),
+                    message  # Pass the user's original request
+                )
             elif action == 'followup':
-                click.echo(click.style(f"\nFollow-up question: {followup}\n", fg="cyan"))
-                # TODO: handle follow-up question
-                click.echo(click.style("Follow-up questions not yet implemented!", fg="yellow"))
+                process_ask_request(followup)
+            # elif action == 'quit': just exit naturally
+
         else:
             # Regular text response - still show function calls if any
             display_function_calls(response.get("function_calls"))
@@ -63,3 +62,19 @@ def ask(request: str, cmd: str | None):
     else:
         click.echo(f"Error: {response.get('message', 'Unknown error')}", err=True)
         raise click.Abort()
+
+
+@click.command()
+@click.argument("request")
+@click.option("--cmd", "-c", help="Command to get help for", required=False)
+def ask(request: str, cmd: str | None):
+    """Ask BashBuddy a question about bash commands."""
+    
+    # Prepare the message
+    if cmd:
+        message = f"Help for command '{cmd}': {request}"
+    else:
+        message = request
+    
+    # Process the request
+    process_ask_request(message)
