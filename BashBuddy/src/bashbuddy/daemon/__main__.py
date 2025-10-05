@@ -9,7 +9,7 @@ if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
 from bashbuddy.daemon.server import BashBuddyDaemon
-from bashbuddy.utils import get_socket_path
+from bashbuddy.daemon.client import get_socket_path
 
 
 def main():
