@@ -1,0 +1,277 @@
+.quiz-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.quiz-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-filter {
+  /* Remove default appearance */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Custom background with gradient and arrow */
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.02)
+    ),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2335ff7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right 12px center;
+
+  background-size: auto, 12px;
+  color: var(--accent);
+  border: 1px solid rgba(53, 255, 122, 0.2);
+  border-radius: 8px;
+  padding: 0.8rem 2.5rem 0.8rem 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  min-width: 180px;
+}
+
+.category-filter:hover:not(:disabled) {
+  border-color: rgba(53, 255, 122, 0.5);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.03)
+    ),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2335ff7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right 12px center;
+  background-size: auto, 12px;
+  box-shadow: 0 4px 12px rgba(53, 255, 122, 0.15);
+  transform: translateY(-1px);
+}
+
+.category-filter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(53, 255, 122, 0.15),
+    0 4px 12px rgba(53, 255, 122, 0.2);
+}
+
+.category-filter:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.category-filter option {
+  background: var(--bg);
+  color: var(--accent);
+  padding: 8px;
+  font-weight: 500;
+  font-family: var(--mono);
+}
+
+.generate-quiz-btn {
+  background: linear-gradient(180deg, #238636, #1c7430);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  font-family: var(--mono);
+  flex: 1;
+  min-width: 200px;
+}
+
+.generate-quiz-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.generate-quiz-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.quiz-error {
+  color: #ff5252;
+  padding: 1rem;
+  margin: 1rem 0;
+  background: rgba(255, 82, 82, 0.1);
+  border-radius: 6px;
+  font-family: var(--mono);
+}
+
+.questions-list {
+  margin-top: 2rem;
+}
+
+.question-card {
+  background: linear-gradient(180deg, #071018, #0b1116);
+  border: 1px solid rgba(52, 255, 140, 0.06);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.question-card-animate {
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.question-card > * {
+  width: 100%;
+}
+
+.question-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.question-number {
+  background: linear-gradient(180deg, #238636, #1c7430);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.question-text {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.quiz-answer-input {
+  width: 95%;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(52, 255, 140, 0.3);
+  border-radius: 6px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.quiz-answer-input:focus {
+  outline: none;
+  border-color: #34ff8c;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 2px rgba(52, 255, 140, 0.1);
+}
+
+.quiz-answer-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quiz-submit-btn {
+  background: linear-gradient(180deg, #238636, #1c7430);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--mono);
+  align-self: flex-start;
+}
+
+.quiz-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.quiz-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.feedback-text {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(52, 255, 140, 0.06);
+  border-left: 3px solid #34ff8c;
+  border-radius: 4px;
+  color: #34ff8c;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  width: 95%;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  text-align: center;
+}
+
+.feedback-text.correct {
+  background: rgba(52, 255, 140, 0.08);
+  border-left-color: #34ff8c;
+}
+
+.feedback-text.incorrect {
+  background: rgba(255, 82, 82, 0.06);
+  border-left-color: #ff5252;
+  color: #ff9d9d;
+}
+
+.final-evaluation {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, #071018, #0b1116);
+  border: 2px solid #34ff8c;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(52, 255, 140, 0.2);
+}
+
+.final-evaluation h3 {
+  color: #34ff8c;
+  font-family: var(--mono);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.final-evaluation p {
+  color: var(--accent);
+  font-family: var(--mono);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}

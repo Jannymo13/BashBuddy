@@ -1,0 +1,96 @@
+:root{
+  --bg:#0b0f14;
+  --panel:#0f1720;
+  --accent:#35ff7a;
+  --muted:#9aa4b2;
+  --glass: rgba(255,255,255,0.03);
+  --card-h:200px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+}
+
+body {
+  background: var(--bg);
+  color: #fff;
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  font-family: var(--mono);
+}
+
+h1 {
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  font-family: var(--mono);
+}
+
+.generate-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: var(--mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2rem;
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-box {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: #c33;
+}
+
+.response-box {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.response-box h2 {
+  color: #667eea;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.response-box p {
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  font-size: 1rem;
+}
