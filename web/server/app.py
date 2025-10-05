@@ -3,7 +3,8 @@ from flask_cors import CORS
 from gemini import generate_response
 from database import list_tables, fetch_all_from_table, execute_query
 import uuid
-from datetime import datetime
+from datetime import datetime 
+from prompt import generate_quiz_prompt
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -27,9 +28,8 @@ def generate_quiz():
             f"Command: {r['query']}\nResponse: {r['response']}"
             for r in results
         ])
-        
-        prompt = 
-        
+
+        prompt = generate_quiz_prompt(commands_text)
         result = generate_response(prompt)
         
         # Clean and parse the response
