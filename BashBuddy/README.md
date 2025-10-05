@@ -1,4 +1,4 @@
-    # BashBuddy 🤖
+# BashBuddy 🤖
 
 Your intelligent terminal command assistant powered by Google's Gemini AI.
 
@@ -20,12 +20,6 @@ BashBuddy helps you find the right bash commands by understanding what you want 
 - Python 3.13 or higher
 - Google Gemini API key
 - (Optional) Supabase account for logging
-
-### Install from PyPI
-
-```bash
-pip install bashbuddy
-```
 
 ### Install from source
 
