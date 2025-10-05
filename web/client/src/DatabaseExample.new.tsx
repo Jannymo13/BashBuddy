@@ -6,7 +6,7 @@ type RequestRow = {
   created_at?: string;
   query?: string;
   req_id?: string;
-  response?: string;
+  suggested_command?: string;
   user?: string;
 };
 
@@ -134,7 +134,8 @@ export default function DatabaseExample() {
               >
                 <div className="card-face card-front">
                   <div className="cmd-line">
-                    <span className="prompt user">user@bashbuddy</span>:
+                    <span className="prompt user">user@bashbuddy</span>:{" "}
+                    {/* USERNAME REPLACE ON LINE ABOVE THIS*/}
                     <span className="path">~</span>${" "}
                     <span className="cmd">{r.query ?? "(no query)"}</span>
                   </div>
@@ -151,7 +152,7 @@ export default function DatabaseExample() {
                       <span className="muted small">{r.req_id ?? ""}</span>
                     </div>
                     <pre className="response-text">
-                      {r.response ?? "(no response)"}
+                      {r.suggested_command ?? "(no command)"}
                     </pre>
                     <div className="meta-row back">
                       <span className="badge dark">{r.user ?? ""}</span>

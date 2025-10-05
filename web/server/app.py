@@ -21,7 +21,7 @@ def start_quiz():
     """Start a new quiz session and generate all 3 questions"""
     try:
         # Get all commands from the database
-        query = "SELECT query, response FROM requests"
+        query = "SELECT query, suggested_command FROM requests"
         results = execute_query(query)
         
         if not results:
