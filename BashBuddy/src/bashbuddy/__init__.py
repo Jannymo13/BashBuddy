@@ -16,13 +16,14 @@ def handle_command_action(command: str, explanation: str, user_request: str = ""
     """
     Handle user action for a command (run/copy/quit).
     This consolidates the duplicate prompt logic.
+    Supports both arrow keys and shortcut keys (r/c/q).
     """
-    action = questionary.select(
+    action = questionary.rawselect(
         "What would you like to do?",
         choices=[
-            "[R] Run the command",
-            "[C] Copy to clipboard",
-            "[Q] Cancel"
+            questionary.Choice(title="[R] Run the command", value="run", shortcut_key="r"),
+            questionary.Choice(title="[C] Copy to clipboard", value="copy", shortcut_key="c"),
+            questionary.Choice(title="[Q] Cancel", value="quit", shortcut_key="q")
         ],
         style=questionary.Style([
             ('selected', 'fg:green bold'),
@@ -31,10 +32,10 @@ def handle_command_action(command: str, explanation: str, user_request: str = ""
         ])
     ).ask()
     
-    if action == "[R] Run the command":
+    if action == "run":
         click.echo()
         execute_command(command, explanation, user_request)
-    elif action == "[C] Copy to clipboard":
+    elif action == "copy":
         click.echo()
         copy_to_clipboard(command, explanation, user_request)
 
