@@ -1,5 +1,5 @@
 .quiz-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 2rem auto;
   padding: 1rem;
 }
@@ -89,8 +89,8 @@
 }
 
 .quiz-answer-input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
+  width: 95%;
+  padding: 0.6rem 1.2rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(52, 255, 140, 0.3);
   border-radius: 6px;
@@ -138,16 +138,17 @@
 
 .feedback-text {
   margin-top: 0.5rem;
-  padding: 0.65rem 0.85rem;
+  padding: 0.6rem 1.2rem;
   background: rgba(52, 255, 140, 0.06);
   border-left: 3px solid #34ff8c;
   border-radius: 4px;
   color: #34ff8c;
   font-family: var(--mono);
   font-size: 0.85rem;
-  width: 100%;
+  width: 95%;
   line-height: 1.5;
   white-space: pre-wrap;
+  text-align: center;
 }
 
 .feedback-text.correct {
