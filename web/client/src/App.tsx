@@ -1,5 +1,5 @@
 import "./App.css";
-import DatabaseExample from "./DatabaseExample";
+import DatabaseExample from "./DatabaseExample.new";
 import QuizComponent from "./QuizComponent";
 
 function App() {
@@ -12,7 +12,6 @@ function App() {
 
       <hr style={{ margin: "3rem 0", border: "1px solid #e0e0e0" }} />
 
-      <h2>Command History</h2>
       <DatabaseExample />
     </div>
   );
