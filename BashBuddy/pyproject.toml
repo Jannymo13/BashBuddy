@@ -1,19 +1,36 @@
 [project]
 name = "bashbuddy"
 version = "0.1.0"
-description = ""
+description = "Your intelligent terminal command assistant powered by Gemini AI"
 authors = [
-    {name = "Jannymo13",email = "jonkonichottil@gmail.com"}
+    {name = "Jannymo13", email = "jonkonichottil@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "click (>=8.3.0,<9.0.0)",
-    "google-genai (>=1.41.0,<2.0.0)",
-    "python-dotenv (>=1.1.1,<2.0.0)",
-    "supabase (>=2.21.1,<3.0.0)",
-    "questionary (>=2.1.1,<3.0.0)"
+license = {text = "MIT"}
+keywords = ["terminal", "bash", "cli", "ai", "assistant", "gemini"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: System :: Shells",
+    "Topic :: Utilities",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
 ]
+dependencies = [
+    "click>=8.3.0,<9.0.0",
+    "google-genai>=1.41.0,<2.0.0",
+    "python-dotenv>=1.1.1,<2.0.0",
+    "supabase>=2.21.1,<3.0.0",
+    "questionary>=2.1.1,<3.0.0",
+    "prompt-toolkit>=3.0.0,<4.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/Jannymo13/bashbuddy"
+Repository = "https://github.com/Jannymo13/bashbuddy"
+Issues = "https://github.com/Jannymo13/bashbuddy/issues"
 
 [tool.poetry]
 packages = [{include = "bashbuddy", from = "src"}]

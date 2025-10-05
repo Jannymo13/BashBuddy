@@ -21,7 +21,7 @@ class SupabaseLogger:
         key = os.getenv("SUPABASE_KEY")
         
         if not url or not key:
-            logger.warning("Supabase credentials not found - command logging disabled")
+            logger.info("Supabase not configured - command logging disabled (optional feature)")
             return
         
         try:
@@ -153,6 +153,7 @@ class SupabaseLogger:
             
             # Build data with only non-empty fields - don't include user
             data = {
+                "user": "a25c7126-1d92-4902-a217-2a32cc807550",
                 "query": user_request,
                 "suggested_command": command,
                 "cmd": category,

@@ -120,9 +120,20 @@ def load_api_key(logger):
     # Get API key
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        logger.error("Error: GEMINI_API_KEY not found in environment")
+        logger.error("=" * 70)
+        logger.error("ERROR: GEMINI_API_KEY not found!")
+        logger.error("=" * 70)
+        logger.error("")
+        logger.error("BashBuddy needs a Gemini API key to work.")
+        logger.error("")
+        logger.error("Quick setup:")
+        logger.error("  1. Get your key: https://aistudio.google.com/app/apikey")
+        logger.error("  2. Create config: mkdir -p ~/.bashbuddy")
+        logger.error("  3. Add your key:")
+        logger.error("       echo 'GEMINI_API_KEY=your_key_here' > ~/.bashbuddy/.env")
+        logger.error("")
         logger.error(f"Searched locations: {[str(p) for p in env_locations]}")
-        logger.error("Please create .env file with: GEMINI_API_KEY=\"your-key-here\"")
+        logger.error("=" * 70)
         sys.exit(1)
     
     return api_key
