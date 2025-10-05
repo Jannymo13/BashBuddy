@@ -4,17 +4,21 @@ from gemini import generate_response
 from database import list_tables, fetch_all_from_table, execute_query
 import uuid
 from datetime import datetime 
-from prompt import generate_quiz_prompt
+from prompt import generate_quiz_prompt, evaluate_correctness
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+# Store quiz sessions in memory (in production, use Redis or database)
+quiz_sessions = {}
 
 @app.route('/users')
 def users(): 
     return {"users": ["Alice", "Bob", "Charlie"]}
 
-@app.route('/api/quiz', methods=["GET"])
-def generate_quiz():
+@app.route('/api/quiz/start', methods=["POST"])
+def start_quiz():
+    """Start a new quiz session and get the first question"""
     try:
         # Get all commands from the database
         query = "SELECT query, response FROM requests"
@@ -30,38 +34,110 @@ def generate_quiz():
         ])
 
         prompt = generate_quiz_prompt(commands_text)
-        result = generate_response(prompt)
         
-        # Clean and parse the response
-        try:
-            import json
-            response_text = result.get("generated_text", "")
-            
-            # Clean up any formatting issues
-            response_text = response_text.strip()
-            if response_text.startswith("```json"):
-                response_text = response_text.removeprefix("```json").removesuffix("```").strip()
-            
-            # Parse JSON and clean up each question
-            questions = json.loads(response_text)
-            questions = [q.strip().strip('"').replace('\\n', '\n') for q in questions]
-            
-            return jsonify({"questions": questions})
-        except Exception as e:
-            print(f"Error parsing questions: {str(e)}")
-            # Fallback: split by line numbers and clean up
-            text = result.get("generated_text", "")
-            questions = []
-            for line in text.split('\n'):
-                line = line.strip()
-                if line and not line.startswith(('[', ']', '{', '}')):
-                    # Remove numbering, quotes, and clean up
-                    cleaned = line.split('.', 1)[-1].strip().strip('"')
-                    if cleaned:
-                        questions.append(cleaned)
-            return jsonify({"questions": questions[:3]})  # Ensure we return max 3 questions
+        # Create a new session
+        session_id = str(uuid.uuid4())
+        quiz_sessions[session_id] = {
+            "conversation_history": [prompt],
+            "questions": [],
+            "question_count": 0
+        }
+        
+        # Get first question
+        result = generate_response(prompt)
+        first_question = result.get("generated_text", "").strip()
+        
+        # Store question in session
+        quiz_sessions[session_id]["conversation_history"].append(first_question)
+        quiz_sessions[session_id]["questions"].append(first_question)
+        quiz_sessions[session_id]["question_count"] = 1
+        
+        return jsonify({
+            "session_id": session_id,
+            "question": first_question
+        })
     except Exception as e:
-        print(f"Error generating quiz: {str(e)}")
+        print(f"Error starting quiz: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/quiz/next', methods=["POST"])
+def get_next_question():
+    """Get the next question without evaluating current answer"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        question_num = data.get('question_num')
+        
+        if not session_id or session_id not in quiz_sessions:
+            return jsonify({"error": "Invalid session"}), 400
+        
+        session = quiz_sessions[session_id]
+        
+        # If this was question 1 or 2, get the next question
+        if question_num < 3:
+            # Simulate a placeholder answer to prompt Gemini for the next question
+            # According to prompt.py, Gemini waits for answer before giving next question
+            placeholder_answer = "[Answer provided]"
+            session["conversation_history"].append(placeholder_answer)
+            
+            # Build the conversation and request next question
+            conversation = "\n".join(session["conversation_history"])
+            
+            # Request the next question from Gemini
+            result = generate_response(conversation)
+            next_question = result.get("generated_text", "").strip()
+            
+            # Store in session
+            session["conversation_history"].append(next_question)
+            session["questions"].append(next_question)
+            session["question_count"] += 1
+            
+            return jsonify({
+                "next_question": next_question
+            })
+        else:
+            return jsonify({"next_question": None})
+            
+    except Exception as e:
+        print(f"Error getting next question: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/quiz/submit', methods=["POST"])
+def submit_quiz():
+    """Submit all answers and get evaluation for each question"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        qa_pairs = data.get('qa_pairs')  # List of {question, answer} objects
+        
+        if not session_id or session_id not in quiz_sessions:
+            return jsonify({"error": "Invalid session"}), 400
+        
+        if not qa_pairs or len(qa_pairs) != 3:
+            return jsonify({"error": "All 3 questions must be answered"}), 400
+        
+        # Evaluate each question-answer pair using Gemini
+        evaluations = []
+        for qa in qa_pairs:
+            question = qa.get('question')
+            answer = qa.get('answer')
+            
+            # Use the evaluate_correctness function to create evaluation prompt
+            eval_prompt = evaluate_correctness(question, answer)
+            
+            # Get evaluation from Gemini
+            result = generate_response(eval_prompt)
+            evaluation = result.get("generated_text", "").strip()
+            evaluations.append(evaluation)
+        
+        # Clean up session
+        del quiz_sessions[session_id]
+        
+        return jsonify({
+            "evaluations": evaluations
+        })
+    except Exception as e:
+        print(f"Error submitting quiz: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # Supabase endpoints
