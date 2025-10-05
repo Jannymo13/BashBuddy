@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./database.css";
 
 type RequestRow = {
   cmd?: string;
