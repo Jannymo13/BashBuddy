@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from gemini import generate_response
 from database import list_tables, fetch_all_from_table, execute_query
+import uuid
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -10,16 +12,56 @@ CORS(app)  # Enable CORS for all routes
 def users(): 
     return {"users": ["Alice", "Bob", "Charlie"]}
 
-@app.route('/api/generate', methods=["POST"])
-def generate():
+@app.route('/api/quiz', methods=["GET"])
+def generate_quiz():
     try:
-        # Get prompt from request body, or use hardcoded prompt
-        data = request.get_json() if request.is_json else {}
-        prompt = data.get('prompt', 'hi my name is parth j')
+        # Get all commands from the database
+        query = "SELECT query, response FROM requests"
+        results = execute_query(query)
+        
+        if not results:
+            return jsonify({"error": "No commands found in database"}), 404
+            
+        # Create a prompt for Gemini
+        commands_text = "\n".join([
+            f"Command: {r['query']}\nResponse: {r['response']}"
+            for r in results
+        ])
+        
+        prompt = 
         
         result = generate_response(prompt)
-        return jsonify(result)
+        
+        # Clean and parse the response
+        try:
+            import json
+            response_text = result.get("generated_text", "")
+            
+            # Clean up any formatting issues
+            response_text = response_text.strip()
+            if response_text.startswith("```json"):
+                response_text = response_text.removeprefix("```json").removesuffix("```").strip()
+            
+            # Parse JSON and clean up each question
+            questions = json.loads(response_text)
+            questions = [q.strip().strip('"').replace('\\n', '\n') for q in questions]
+            
+            return jsonify({"questions": questions})
+        except Exception as e:
+            print(f"Error parsing questions: {str(e)}")
+            # Fallback: split by line numbers and clean up
+            text = result.get("generated_text", "")
+            questions = []
+            for line in text.split('\n'):
+                line = line.strip()
+                if line and not line.startswith(('[', ']', '{', '}')):
+                    # Remove numbering, quotes, and clean up
+                    cleaned = line.split('.', 1)[-1].strip().strip('"')
+                    if cleaned:
+                        questions.append(cleaned)
+            return jsonify({"questions": questions[:3]})  # Ensure we return max 3 questions
     except Exception as e:
+        print(f"Error generating quiz: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # Supabase endpoints
