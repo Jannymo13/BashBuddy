@@ -20,16 +20,34 @@ def users():
 def start_quiz():
     """Start a new quiz session and generate all 3 questions"""
     try:
-        # Get all commands from the database
-        query = "SELECT query, suggested_command FROM requests"
-        results = execute_query(query)
+        data = request.get_json()
+        category = data.get('category', 'all') if data else 'all'
+        
+        # Build query based on category filter
+        if category and category != 'all':
+            query = """
+                SELECT query, suggested_command 
+                FROM requests 
+                WHERE cmd = :cmd
+                ORDER BY created_at DESC 
+                LIMIT 11
+            """
+            results = execute_query(query, {"cmd": category})
+        else:
+            query = """
+                SELECT query, suggested_command 
+                FROM requests 
+                ORDER BY created_at DESC 
+                LIMIT 11
+            """
+            results = execute_query(query)
         
         if not results:
             return jsonify({"error": "No commands found in database"}), 404
             
         # Create a prompt for Gemini
         commands_text = "\n".join([
-            f"Command: {r['query']}\nResponse: {r['response']}"
+            f"Command: {r['query']}\nSuggested Command: {r['suggested_command']}"
             for r in results
         ])
 
@@ -113,6 +131,17 @@ def get_tables():
     try:
         tables = list_tables()
         return jsonify({"tables": tables})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/db/categories', methods=["GET"])
+def get_categories():
+    """Get all unique command categories"""
+    try:
+        query = "SELECT DISTINCT cmd FROM requests WHERE cmd IS NOT NULL ORDER BY cmd"
+        results = execute_query(query)
+        categories = [r['cmd'] for r in results]
+        return jsonify({"categories": categories})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

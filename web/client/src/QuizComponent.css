@@ -4,6 +4,78 @@
   padding: 1rem;
 }
 
+.quiz-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-filter {
+  /* Remove default appearance */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Custom background with gradient and arrow */
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.02)
+    ),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2335ff7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right 12px center;
+
+  background-size: auto, 12px;
+  color: var(--accent);
+  border: 1px solid rgba(53, 255, 122, 0.2);
+  border-radius: 8px;
+  padding: 0.8rem 2.5rem 0.8rem 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  min-width: 180px;
+}
+
+.category-filter:hover:not(:disabled) {
+  border-color: rgba(53, 255, 122, 0.5);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.03)
+    ),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2335ff7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right 12px center;
+  background-size: auto, 12px;
+  box-shadow: 0 4px 12px rgba(53, 255, 122, 0.15);
+  transform: translateY(-1px);
+}
+
+.category-filter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(53, 255, 122, 0.15),
+    0 4px 12px rgba(53, 255, 122, 0.2);
+}
+
+.category-filter:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.category-filter option {
+  background: var(--bg);
+  color: var(--accent);
+  padding: 8px;
+  font-weight: 500;
+  font-family: var(--mono);
+}
+
 .generate-quiz-btn {
   background: linear-gradient(180deg, #238636, #1c7430);
   color: white;
@@ -15,6 +87,8 @@
   transition: all 0.2s;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   font-family: var(--mono);
+  flex: 1;
+  min-width: 200px;
 }
 
 .generate-quiz-btn:hover {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./QuizComponent.css";
 
 interface QuizQuestion {
@@ -17,6 +17,25 @@ function QuizComponent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/db/categories");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCategories(data.categories || []);
+      } catch (e) {
+        console.error("Failed to fetch categories:", e);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const startQuiz = async () => {
     setLoading(true);
@@ -24,6 +43,12 @@ function QuizComponent() {
     try {
       const response = await fetch("/api/quiz/start", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category: selectedCategory,
+        }),
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -136,23 +161,40 @@ function QuizComponent() {
 
   return (
     <div className="quiz-container">
-      {!quizStarted ? (
-        <button
-          onClick={startQuiz}
-          disabled={loading}
-          className="generate-quiz-btn"
-        >
-          {loading ? "Starting Quiz..." : "Generate Practice Questions"}
-        </button>
-      ) : (
-        <button
-          onClick={resetQuiz}
-          disabled={loading}
-          className="generate-quiz-btn"
-        >
-          Start New Quiz
-        </button>
-      )}
+      <div className="quiz-header">
+        {!quizStarted ? (
+          <>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="category-filter"
+              disabled={loading}
+            >
+              <option value="all">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={startQuiz}
+              disabled={loading}
+              className="generate-quiz-btn"
+            >
+              {loading ? "Starting Quiz..." : "Generate Practice Questions"}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={resetQuiz}
+            disabled={loading}
+            className="generate-quiz-btn"
+          >
+            Start New Quiz
+          </button>
+        )}
+      </div>
 
       {error && <div className="quiz-error">{error}</div>}
 
