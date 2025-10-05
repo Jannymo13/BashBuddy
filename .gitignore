@@ -1,0 +1,6 @@
+BashBuddy/.env
+BashBuddy/src/bashbuddy/__pycache__
+*.pyc
+*.pyo
+.nvimlocal/
+.bashbuddy/
