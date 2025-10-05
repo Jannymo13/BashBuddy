@@ -95,7 +95,8 @@ class BashBuddyDaemon:
 
             if command == "ask":
                 message = request.get("message")
-                response = self._handle_ask(message)
+                force_fresh = request.get("force_fresh", False)
+                response = self._handle_ask(message, force_fresh=force_fresh)
             elif command == "ping":
                 response = {"status": "ok", "message": "pong"}
             elif command == "reset":
@@ -121,9 +122,16 @@ class BashBuddyDaemon:
         finally:
             client_socket.close()
 
-    def _handle_ask(self, message: str):
+    def _handle_ask(self, message: str, force_fresh: bool = False):
         """Process a question using Gemini with function calling."""
         try:
+            # Check if we have an exact match in history (unless force_fresh)
+            if not force_fresh:
+                cached_result = self._check_history_cache(message)
+                if cached_result:
+                    logger.info(f"Cache hit for query: {message[:50]}...")
+                    return cached_result
+            
             # Add user message to history
             self.history.append({"role": "user", "content": message})
 
@@ -281,6 +289,42 @@ class BashBuddyDaemon:
                 "status": "error",
                 "message": f"Failed to generate response: {str(e)}"
             }
+
+    def _check_history_cache(self, query: str):
+        """
+        Check if we have an exact match for this query in history.
+        Returns the cached response if found, None otherwise.
+        """
+        # Look for matching user query in history
+        for i in range(len(self.history) - 1):
+            if self.history[i]["role"] == "user" and self.history[i]["content"].strip().lower() == query.strip().lower():
+                # Found a match! Get the next assistant response
+                if i + 1 < len(self.history) and self.history[i + 1]["role"] == "assistant":
+                    cached_response = self.history[i + 1]["content"]
+                    
+                    # Parse the cached response to extract command and explanation
+                    if "Command:" in cached_response and "Explanation:" in cached_response:
+                        lines = cached_response.split("\n")
+                        command = ""
+                        explanation = ""
+                        
+                        for line in lines:
+                            if line.startswith("Command:"):
+                                command = line.replace("Command:", "").strip()
+                            elif line.startswith("Explanation:"):
+                                explanation = line.replace("Explanation:", "").strip()
+                        
+                        if command:
+                            return {
+                                "status": "ok",
+                                "type": "command",
+                                "command": command,
+                                "explanation": explanation,
+                                "cached": True,
+                                "history_length": len(self.history)
+                            }
+        
+        return None
 
     def _handle_reset(self):
         """Reset conversation history."""

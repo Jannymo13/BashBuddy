@@ -35,9 +35,28 @@ def process_ask_request(message: str):
             
             # Display command and explanation side by side
             display_command_and_explanation(response)
+            
+            # Show if this is a cached result (AFTER displaying command)
+            if response.get("cached"):
+                click.echo()
+                click.echo(click.style("Retrieved result from history (exact match)", fg="cyan", dim=True))
+                click.echo(click.style("  Press [F] to force a fresh query", fg="cyan", dim=True))
 
             # Prompt user for next action
-            action, followup = prompt_user_action(response["command"])
+            action, followup = prompt_user_action(response["command"], is_cached=response.get("cached", False))
+
+            # Handle force refresh
+            if action == 'refresh':
+                click.echo(click.style("\nFetching fresh result...\n", fg="yellow"))
+                # Send request with force flag to bypass cache
+                response = send_command("ask", message=message, force_fresh=True)
+                if response.get("status") == "ok" and "command" in response:
+                    display_function_calls(response.get("function_calls"))
+                    display_command_and_explanation(response)
+                    action, followup = prompt_user_action(response["command"], is_cached=False)
+                else:
+                    click.echo("Error getting fresh result", err=True)
+                    return
 
             if action == 'run':
                 click.echo(click.style("\nRunning command...", fg="green", bold=True))

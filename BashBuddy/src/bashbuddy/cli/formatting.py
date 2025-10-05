@@ -2,10 +2,11 @@
 
 import click
 import shutil
+from typing import Dict, List, Any
 
 
-def wrap_text(text, width):
-    """Wrap text to fit within a given width."""
+def wrap_text(text: str, width: int) -> List[str]:
+    """Wrap text to fit within specified width."""
     words = text.split()
     lines = []
     current_line = []
@@ -28,19 +29,15 @@ def wrap_text(text, width):
     return lines
 
 
-def wrap_command(command, width):
-    """
-    Wrap a command intelligently, breaking at spaces or special characters.
-    Continuation lines are indented.
-    """
+def wrap_command(command: str, width: int) -> List[str]:
+    """Wrap command intelligently at spaces/special chars with indent for continuation."""
     if len(command) <= width - 2:
         return [f"  {command}"]
     
     lines = []
     current_line = "  "
-    indent = "    "  # Indentation for continuation lines
+    indent = "    "
     
-    # Try to break at logical points: spaces, pipes, semicolons
     tokens = []
     current_token = ""
     
@@ -71,22 +68,20 @@ def wrap_command(command, width):
     return lines
 
 
-def display_function_calls(function_calls):
-    """Display function calls in a formatted box."""
+def display_function_calls(function_calls: List[Dict[str, Any]]) -> None:
+    """Display function calls in formatted box."""
     if not function_calls:
         return
     
     terminal_width = shutil.get_terminal_size().columns
     box_width = min(60, terminal_width - 4)
     
-    # Header
     click.echo()
     click.echo("═" * box_width)
     click.echo(click.style("  Function Calls", fg="yellow", bold=True))
     click.echo("═" * box_width)
     click.echo()
     
-    # Display each function call
     for i, call in enumerate(function_calls, 1):
         func_name = call['name']
         args = call.get('arguments', {})
@@ -114,8 +109,8 @@ def display_function_calls(function_calls):
         click.echo()
 
 
-def display_command_and_explanation(response):
-    """Display command and explanation side by side in a formatted table."""
+def display_command_and_explanation(response: Dict[str, Any]) -> None:
+    """Display command and explanation side by side in formatted table."""
     terminal_width = shutil.get_terminal_size().columns
     
     # Use full terminal width, minus some padding
@@ -161,8 +156,8 @@ def display_command_and_explanation(response):
     click.echo("═" * table_width)
 
 
-def display_text_response(message_text):
-    """Display a text response in a formatted box."""
+def display_text_response(message_text: str) -> None:
+    """Display text response in formatted box."""
     terminal_width = shutil.get_terminal_size().columns
     box_width = min(terminal_width - 4, 100)
     
