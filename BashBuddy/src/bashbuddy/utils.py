@@ -53,7 +53,7 @@ def send_command(command: str, **kwargs):
     try:
         # Create socket and connect
         client_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client_socket.settimeout(30)  # 30 second timeout
+        client_socket.settimeout(60)  # 60 second timeout (increased for API rate limits)
         client_socket.connect(socket_path)
         
         # Prepare request
@@ -76,13 +76,18 @@ def send_command(command: str, **kwargs):
         client_socket.close()
         
         # Parse response
+        if not data:
+            return {"status": "error", "message": "Daemon closed connection (possibly crashed). Try: bb stop && bb start"}
+        
         response = json.loads(data.decode('utf-8').strip())
         return response
         
     except socket.timeout:
-        return {"status": "error", "message": "Request timed out"}
+        return {"status": "error", "message": "Request timed out (API may be slow or rate limited)"}
     except ConnectionRefusedError:
         return {"status": "error", "message": "Could not connect to daemon"}
+    except BrokenPipeError:
+        return {"status": "error", "message": "Connection broken (daemon may have crashed). Try restarting: bb stop && bb start"}
     except Exception as e:
         return {"status": "error", "message": f"Communication error: {str(e)}"}
 
@@ -97,7 +102,7 @@ def start_daemon():
         import sys
         python_exe = sys.executable
         
-        # Get the daemon module path
+        # Get the daemon module path (use __main__.py)
         daemon_module = "bashbuddy.daemon"
         
         # Start daemon in background

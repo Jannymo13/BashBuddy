@@ -1,5 +1,5 @@
 import click
-from bashbuddy.ask import ask
+from bashbuddy.cli.commands import ask
 from bashbuddy.utils import (
     start_daemon,
     stop_daemon,
@@ -23,11 +23,11 @@ def start():
     result = start_daemon()
     
     if result["status"] == "ok":
-        click.echo(f"✓ {result['message']}")
+        click.echo(f"  {result['message']}")
         click.echo(f"  PID: {result.get('pid')}")
         click.echo("\nYou can now use: bashbuddy ask \"your question\"")
     else:
-        click.echo(f"✗ {result['message']}", err=True)
+        click.echo(f"  {result['message']}", err=True)
         raise click.Abort()
 
 
@@ -38,9 +38,9 @@ def stop():
     result = stop_daemon()
     
     if result["status"] == "ok":
-        click.echo(f"✓ {result['message']}")
+        click.echo(f"  {result['message']}")
     else:
-        click.echo(f"✗ {result['message']}", err=True)
+        click.echo(f"  {result['message']}", err=True)
         raise click.Abort()
 
 
