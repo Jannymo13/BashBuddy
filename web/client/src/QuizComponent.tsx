@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./QuizComponent.css";
 
 interface QuizQuestion {
@@ -19,6 +19,7 @@ function QuizComponent() {
   const [sessionId, setSessionId] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const topInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -93,6 +94,11 @@ function QuizComponent() {
       ];
       setDisplayedQuestions(newDisplayedQuestions);
       setCurrentQuestionNum(currentQuestionNum + 1);
+
+      // Focus on the new input after a short delay to ensure it's rendered
+      setTimeout(() => {
+        topInputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -227,11 +233,27 @@ function QuizComponent() {
                   </p>
                 </div>
                 <input
+                  ref={index === 0 ? topInputRef : null}
                   type="text"
                   className="quiz-answer-input"
                   placeholder="Your answer..."
                   value={q.answer}
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && q.answer.trim() && !q.feedback) {
+                      e.preventDefault();
+                      if (index === 0 && currentQuestionNum < 3) {
+                        handleNext(index);
+                      } else if (
+                        index === 0 &&
+                        currentQuestionNum === 3 &&
+                        !loading &&
+                        !displayedQuestions.some((q) => !q.answer.trim())
+                      ) {
+                        handleSubmit();
+                      }
+                    }
+                  }}
                   disabled={q.feedback !== undefined}
                 />
 
