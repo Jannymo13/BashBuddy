@@ -18,7 +18,7 @@ def users():
 
 @app.route('/api/quiz/start', methods=["POST"])
 def start_quiz():
-    """Start a new quiz session and get the first question"""
+    """Start a new quiz session and generate all 3 questions"""
     try:
         # Get all commands from the database
         query = "SELECT query, response FROM requests"
@@ -35,72 +35,37 @@ def start_quiz():
 
         prompt = generate_quiz_prompt(commands_text)
         
+        # Get all 3 questions at once
+        result = generate_response(prompt)
+        response_text = result.get("generated_text", "").strip()
+        
+        # Parse the questions - they should be numbered 1., 2., 3.
+        questions = []
+        for line in response_text.split('\n'):
+            line = line.strip()
+            # Look for lines starting with "1.", "2.", or "3."
+            if line and (line.startswith('1.') or line.startswith('2.') or line.startswith('3.')):
+                # Remove the number prefix
+                question = line.split('.', 1)[1].strip()
+                if question:
+                    questions.append(question)
+        
+        # Ensure we have exactly 3 questions
+        if len(questions) != 3:
+            return jsonify({"error": f"Expected 3 questions but got {len(questions)}"}), 500
+        
         # Create a new session
         session_id = str(uuid.uuid4())
         quiz_sessions[session_id] = {
-            "conversation_history": [prompt],
-            "questions": [],
-            "question_count": 0
+            "questions": questions
         }
-        
-        # Get first question
-        result = generate_response(prompt)
-        first_question = result.get("generated_text", "").strip()
-        
-        # Store question in session
-        quiz_sessions[session_id]["conversation_history"].append(first_question)
-        quiz_sessions[session_id]["questions"].append(first_question)
-        quiz_sessions[session_id]["question_count"] = 1
         
         return jsonify({
             "session_id": session_id,
-            "question": first_question
+            "questions": questions
         })
     except Exception as e:
         print(f"Error starting quiz: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/quiz/next', methods=["POST"])
-def get_next_question():
-    """Get the next question without evaluating current answer"""
-    try:
-        data = request.get_json()
-        session_id = data.get('session_id')
-        question_num = data.get('question_num')
-        
-        if not session_id or session_id not in quiz_sessions:
-            return jsonify({"error": "Invalid session"}), 400
-        
-        session = quiz_sessions[session_id]
-        
-        # If this was question 1 or 2, get the next question
-        if question_num < 3:
-            # Simulate a placeholder answer to prompt Gemini for the next question
-            placeholder_answer = "user_answer_placeholder"
-            
-            # Build the conversation and explicitly request the next question number
-            conversation = "\n".join(session["conversation_history"])
-            next_question_prompt = f"{conversation}\n{placeholder_answer}\nProvide the next question (question {question_num + 1} of 3):"
-            
-            # Request the next question from Gemini
-            result = generate_response(next_question_prompt)
-            next_question = result.get("generated_text", "").strip()
-            
-            # Clean up the response - remove any conversational fluff
-            # Store the placeholder and question in conversation history
-            session["conversation_history"].append(placeholder_answer)
-            session["conversation_history"].append(next_question)
-            session["questions"].append(next_question)
-            session["question_count"] += 1
-            
-            return jsonify({
-                "next_question": next_question
-            })
-        else:
-            return jsonify({"next_question": None})
-            
-    except Exception as e:
-        print(f"Error getting next question: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/quiz/submit', methods=["POST"])

@@ -10,7 +10,10 @@ interface QuizQuestion {
 function QuizComponent() {
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentQuestionNum, setCurrentQuestionNum] = useState(0);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [allQuestions, setAllQuestions] = useState<string[]>([]); // All 3 questions
+  const [displayedQuestions, setDisplayedQuestions] = useState<QuizQuestion[]>(
+    []
+  ); // Questions shown to user
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState("");
@@ -31,7 +34,8 @@ function QuizComponent() {
       }
 
       setSessionId(data.session_id);
-      setQuestions([{ question: data.question, answer: "" }]);
+      setAllQuestions(data.questions); // Store all 3 questions
+      setDisplayedQuestions([{ question: data.questions[0], answer: "" }]); // Show only first question
       setCurrentQuestionNum(1);
       setQuizStarted(true);
     } catch (e) {
@@ -42,61 +46,33 @@ function QuizComponent() {
   };
 
   const handleAnswerChange = (index: number, value: string) => {
-    const newQuestions = [...questions];
+    const newQuestions = [...displayedQuestions];
     newQuestions[index].answer = value;
-    setQuestions(newQuestions);
+    setDisplayedQuestions(newQuestions);
   };
 
-  const handleNext = async (index: number) => {
-    if (!questions[index].answer.trim()) {
+  const handleNext = (index: number) => {
+    if (!displayedQuestions[index].answer.trim()) {
       setError("Please provide an answer before proceeding.");
       return;
     }
 
-    setLoading(true);
     setError("");
 
-    try {
-      const response = await fetch("/api/quiz/next", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          question_num: index + 1,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Add next question
-      const newQuestions = [...questions];
-      if (data.next_question) {
-        newQuestions.push({
-          question: data.next_question,
-          answer: "",
-        });
-        setCurrentQuestionNum(currentQuestionNum + 1);
-      }
-
-      setQuestions(newQuestions);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to get next question");
-    } finally {
-      setLoading(false);
+    // Add the next question to the top of displayed questions
+    const nextQuestionIndex = currentQuestionNum; // 0-indexed: 0, 1, 2 -> we want questions[1] then questions[2]
+    if (nextQuestionIndex < allQuestions.length) {
+      const newDisplayedQuestions = [
+        { question: allQuestions[nextQuestionIndex], answer: "" },
+        ...displayedQuestions,
+      ];
+      setDisplayedQuestions(newDisplayedQuestions);
+      setCurrentQuestionNum(currentQuestionNum + 1);
     }
   };
 
   const handleSubmit = async () => {
-    if (!questions[2].answer.trim()) {
+    if (!displayedQuestions[0].answer.trim()) {
       setError("Please provide an answer before submitting.");
       return;
     }
@@ -106,10 +82,12 @@ function QuizComponent() {
 
     try {
       // Prepare question-answer pairs
-      const qaData = questions.map((q) => ({
-        question: q.question,
-        answer: q.answer,
-      }));
+      const qaData = displayedQuestions
+        .map((q) => ({
+          question: q.question,
+          answer: q.answer,
+        }))
+        .reverse(); // Reverse to get original order (Q1, Q2, Q3)
 
       const response = await fetch("/api/quiz/submit", {
         method: "POST",
@@ -131,14 +109,15 @@ function QuizComponent() {
         throw new Error(data.error);
       }
 
-      // Update each question with its individual feedback
-      const newQuestions = [...questions];
-      data.evaluations.forEach((evaluation: string, index: number) => {
+      // Update each question with its individual feedback (in reverse order)
+      const newQuestions = [...displayedQuestions];
+      const reversedEvaluations = [...data.evaluations].reverse();
+      reversedEvaluations.forEach((evaluation: string, index: number) => {
         if (newQuestions[index]) {
           newQuestions[index].feedback = evaluation;
         }
       });
-      setQuestions(newQuestions);
+      setDisplayedQuestions(newQuestions);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to submit quiz");
     } finally {
@@ -149,7 +128,8 @@ function QuizComponent() {
   const resetQuiz = () => {
     setQuizStarted(false);
     setCurrentQuestionNum(0);
-    setQuestions([]);
+    setAllQuestions([]);
+    setDisplayedQuestions([]);
     setSessionId("");
     setError("");
   };
@@ -176,7 +156,7 @@ function QuizComponent() {
 
       {error && <div className="quiz-error">{error}</div>}
 
-      {questions.length > 0 && (
+      {displayedQuestions.length > 0 && (
         <div className="questions-list">
           <div className="terminal-header">
             <div className="dots">
@@ -186,65 +166,73 @@ function QuizComponent() {
             </div>
             <span className="terminal-title">Practice Questions</span>
           </div>
-          {questions.map((q, index) => (
-            <div key={index} className="question-card">
-              <div className="question-header">
-                <span className="question-number">{index + 1}</span>
-                <p className="question-text">
-                  {q.question.split("\n").map((line, i) => (
-                    <span key={i}>
-                      {line}
-                      {i < q.question.split("\n").length - 1 && <br />}
-                    </span>
-                  ))}
-                </p>
-              </div>
-              <input
-                type="text"
-                className="quiz-answer-input"
-                placeholder="Your answer..."
-                value={q.answer}
-                onChange={(e) => handleAnswerChange(index, e.target.value)}
-                disabled={q.feedback !== undefined}
-              />
-
-              {q.feedback && (
-                <div
-                  className={`feedback-text ${
-                    q.feedback.toLowerCase().includes("correct!") ||
-                    q.feedback.toLowerCase().startsWith("correct")
-                      ? "correct"
-                      : "incorrect"
-                  }`}
-                >
-                  {q.feedback}
+          {displayedQuestions.map((q, index) => {
+            const questionNum = displayedQuestions.length - index;
+            return (
+              <div
+                key={`q-${questionNum}`}
+                className="question-card question-card-animate"
+              >
+                <div className="question-header">
+                  <span className="question-number">{questionNum}</span>
+                  <p className="question-text">
+                    {q.question.split("\n").map((line, i) => (
+                      <span key={i}>
+                        {line}
+                        {i < q.question.split("\n").length - 1 && <br />}
+                      </span>
+                    ))}
+                  </p>
                 </div>
-              )}
+                <input
+                  type="text"
+                  className="quiz-answer-input"
+                  placeholder="Your answer..."
+                  value={q.answer}
+                  onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  disabled={q.feedback !== undefined}
+                />
 
-              {index === currentQuestionNum - 1 && index < 2 && (
-                <button
-                  className="quiz-submit-btn"
-                  onClick={() => handleNext(index)}
-                  disabled={loading || !q.answer.trim()}
-                >
-                  {loading ? "Loading..." : "Next"}
-                </button>
-              )}
+                {q.feedback && (
+                  <div
+                    className={`feedback-text ${
+                      q.feedback.toLowerCase().includes("correct!") ||
+                      q.feedback.toLowerCase().startsWith("correct")
+                        ? "correct"
+                        : "incorrect"
+                    }`}
+                  >
+                    {q.feedback}
+                  </div>
+                )}
 
-              {index === 2 && currentQuestionNum === 3 && (
-                <button
-                  className="quiz-submit-btn"
-                  onClick={handleSubmit}
-                  disabled={
-                    loading ||
-                    questions.some((q) => !q.answer.trim() || q.feedback)
-                  }
-                >
-                  {loading ? "Evaluating..." : "Submit"}
-                </button>
-              )}
-            </div>
-          ))}
+                {index === 0 && currentQuestionNum < 3 && (
+                  <button
+                    className="quiz-submit-btn"
+                    onClick={() => handleNext(index)}
+                    disabled={!q.answer.trim()}
+                  >
+                    Next
+                  </button>
+                )}
+
+                {index === 0 && currentQuestionNum === 3 && (
+                  <button
+                    className="quiz-submit-btn"
+                    onClick={handleSubmit}
+                    disabled={
+                      loading ||
+                      displayedQuestions.some(
+                        (q) => !q.answer.trim() || q.feedback
+                      )
+                    }
+                  >
+                    {loading ? "Evaluating..." : "Submit"}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
